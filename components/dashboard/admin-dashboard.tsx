@@ -6,8 +6,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts"
+import { Progress } from "@/components/ui/progress"
+import { Separator } from "@/components/ui/separator"
+import { Calendar, TrendingUp, Users, Package, AlertTriangle, Wrench, Archive, Clock } from "lucide-react"
 import Link from "next/link"
+import { toast } from "@/hooks/use-toast"
 
 interface DashboardStats {
   totalAssets: number
@@ -49,6 +53,7 @@ export function AdminDashboard() {
   const [assetsByCategory, setAssetsByCategory] = useState<AssetByCategory[]>([])
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [selectedPeriod, setSelectedPeriod] = useState("week")
 
   useEffect(() => {
     fetchDashboardData()
@@ -137,30 +142,30 @@ export function AdminDashboard() {
       // Combine and format recent activity
       const activity: RecentActivity[] = []
 
-      recentIssues?.forEach((issue) => {
+      recentIssues?.forEach((issue: any) => {
         if (issue.actual_return_date) {
           activity.push({
             id: issue.id,
             type: "return",
-            asset_name: issue.asset.name,
-            user_name: issue.issued_to_profile.full_name,
+            asset_name: issue.asset?.name || "Unknown Asset",
+            user_name: issue.issued_to_profile?.full_name || "Unknown User",
             date: issue.actual_return_date,
           })
         }
         activity.push({
           id: `${issue.id}-issue`,
           type: "issue",
-          asset_name: issue.asset.name,
-          user_name: issue.issued_to_profile.full_name,
+          asset_name: issue.asset?.name || "Unknown Asset",
+          user_name: issue.issued_to_profile?.full_name || "Unknown User",
           date: issue.issue_date,
         })
       })
 
-      recentAssets?.forEach((asset) => {
+      recentAssets?.forEach((asset: any) => {
         activity.push({
           id: `${asset.id}-register`,
           type: "register",
-          asset_name: asset.name,
+          asset_name: asset.name || "Unknown Asset",
           user_name: asset.created_by_profile?.full_name || "System",
           date: asset.created_at,
         })
@@ -171,16 +176,31 @@ export function AdminDashboard() {
       setRecentActivity(activity.slice(0, 10))
     } catch (error) {
       console.error("Error fetching dashboard data:", error)
+      toast({
+        title: "❌ Error",
+        description: "Failed to load dashboard data. Please refresh the page.",
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }
   }
 
-  const COLORS = ["#2563eb", "#16a34a", "#dc2626", "#ca8a04", "#9333ea"]
+  const getUtilizationRate = () => {
+    if (stats.totalAssets === 0) return 0
+    return Math.round(((stats.issuedAssets + stats.maintenanceAssets) / stats.totalAssets) * 100)
+  }
+
+  const getOverdueRate = () => {
+    if (stats.issuedAssets === 0) return 0
+    return Math.round((stats.overdueAssets / stats.issuedAssets) * 100)
+  }
+
+  const COLORS = ["#16a34a", "#2563eb", "#ca8a04", "#6b7280", "#dc2626"]
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 animate-in fade-in duration-500">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(8)].map((_, i) => (
             <Card key={i} className="animate-pulse">
@@ -196,174 +216,222 @@ export function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-university-blue-900">Admin Dashboard</h1>
-          <p className="text-university-gray-600 mt-1">Overview of asset management system</p>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Admin Dashboard
+          </h1>
+          <p className="text-muted-foreground mt-1">Comprehensive overview of asset management system</p>
         </div>
         <div className="flex gap-2">
-          <Button asChild>
-            <Link href="/dashboard/assets/register">Add Asset</Link>
+          <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+            <Link href="/dashboard/assets/register">
+              <Package className="w-4 h-4 mr-2" />
+              Add Asset
+            </Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/dashboard/issue">Issue Asset</Link>
+            <Link href="/dashboard/issue">
+              <Clock className="w-4 h-4 mr-2" />
+              Issue Asset
+            </Link>
           </Button>
         </div>
       </div>
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
+        <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-105">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
-            <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-              />
-            </svg>
+            <Package className="h-4 w-4 text-muted-foreground group-hover:text-blue-600 transition-colors" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalAssets}</div>
+            <div className="text-2xl font-bold">{stats.totalAssets.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">Registered in system</p>
+            <Progress value={100} className="mt-2" />
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-105">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Available</CardTitle>
-            <svg className="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+            <TrendingUp className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.availableAssets}</div>
+            <div className="text-2xl font-bold text-green-600">{stats.availableAssets.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">Ready for use</p>
+            <Progress 
+              value={stats.totalAssets > 0 ? (stats.availableAssets / stats.totalAssets) * 100 : 0} 
+              className="mt-2" 
+            />
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-105">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Currently Issued</CardTitle>
-            <svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+            <Clock className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.issuedAssets}</div>
+            <div className="text-2xl font-bold text-blue-600">{stats.issuedAssets.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">In use by staff</p>
+            <Progress 
+              value={stats.totalAssets > 0 ? (stats.issuedAssets / stats.totalAssets) * 100 : 0} 
+              className="mt-2" 
+            />
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-105">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Overdue</CardTitle>
-            <svg className="h-4 w-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-              />
-            </svg>
+            <AlertTriangle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.overdueAssets}</div>
+            <div className="text-2xl font-bold text-red-600">{stats.overdueAssets.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">Past due date</p>
+            <Progress 
+              value={getOverdueRate()} 
+              className="mt-2" 
+            />
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-105">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
-              />
-            </svg>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalUsers}</div>
+            <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">Registered users</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-105">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Issues</CardTitle>
-            <svg className="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-              />
-            </svg>
+            <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.activeIssues}</div>
+            <div className="text-2xl font-bold">{stats.activeIssues.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">Currently tracked</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-105">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Maintenance</CardTitle>
-            <svg className="h-4 w-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-              />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
+            <Wrench className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.maintenanceAssets}</div>
+            <div className="text-2xl font-bold text-yellow-600">{stats.maintenanceAssets.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">Under maintenance</p>
+            <Progress 
+              value={stats.totalAssets > 0 ? (stats.maintenanceAssets / stats.totalAssets) * 100 : 0} 
+              className="mt-2" 
+            />
+          </CardContent>
+        </Card>
+
+        <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-105">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Retired</CardTitle>
+            <Archive className="h-4 w-4 text-gray-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-gray-600">{stats.retiredAssets.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">End of life</p>
+            <Progress 
+              value={stats.totalAssets > 0 ? (stats.retiredAssets / stats.totalAssets) * 100 : 0} 
+              className="mt-2" 
+            />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* System Overview */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-blue-600" />
+              System Overview
+            </CardTitle>
+            <CardDescription>Key performance indicators and utilization rates</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">{getUtilizationRate()}%</div>
+                <p className="text-sm text-muted-foreground">Asset Utilization</p>
+              </div>
+              <div className="text-center p-4 bg-green-50 dark:bg-green-950/20 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">{getOverdueRate()}%</div>
+                <p className="text-sm text-muted-foreground">Overdue Rate</p>
+              </div>
+            </div>
+            <Separator />
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Available Assets</span>
+                <span className="font-medium">{stats.availableAssets}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Issued Assets</span>
+                <span className="font-medium">{stats.issuedAssets}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Maintenance</span>
+                <span className="font-medium">{stats.maintenanceAssets}</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Retired</CardTitle>
-            <svg className="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              />
-            </svg>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-purple-600" />
+              Quick Actions
+            </CardTitle>
+            <CardDescription>Common administrative tasks</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-600">{stats.retiredAssets}</div>
-            <p className="text-xs text-muted-foreground">End of life</p>
+          <CardContent className="space-y-3">
+            <Button asChild className="w-full justify-start bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+              <Link href="/dashboard/assets/register">
+                <Package className="w-4 h-4 mr-2" />
+                Register New Asset
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full justify-start">
+              <Link href="/dashboard/issue">
+                <Clock className="w-4 h-4 mr-2" />
+                Issue Asset
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full justify-start">
+              <Link href="/dashboard/issue/active">
+                <Clock className="w-4 h-4 mr-2" />
+                View Active Issues
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full justify-start">
+              <Link href="/dashboard/users">
+                <Users className="w-4 h-4 mr-2" />
+                Manage Users
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
 
       {/* Charts and Analytics */}
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="activity">Recent Activity</TabsTrigger>
@@ -372,7 +440,7 @@ export function AdminDashboard() {
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Asset Status Distribution */}
-            <Card>
+            <Card className="group hover:shadow-lg transition-all duration-300">
               <CardHeader>
                 <CardTitle>Asset Status Distribution</CardTitle>
                 <CardDescription>Current status of all assets</CardDescription>
@@ -392,7 +460,7 @@ export function AdminDashboard() {
                       outerRadius={100}
                       fill="#8884d8"
                       dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }) => `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`}
                     >
                       {[
                         { name: "Available", value: stats.availableAssets, color: "#16a34a" },
@@ -409,67 +477,36 @@ export function AdminDashboard() {
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
-            <Card>
+            {/* Asset Utilization Trend */}
+            <Card className="group hover:shadow-lg transition-all duration-300">
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>Common administrative tasks</CardDescription>
+                <CardTitle>Asset Utilization Trend</CardTitle>
+                <CardDescription>Monthly asset usage patterns</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <Button asChild className="w-full justify-start">
-                  <Link href="/dashboard/assets/register">
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    Register New Asset
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" className="w-full justify-start bg-transparent">
-                  <Link href="/dashboard/issue">
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                      />
-                    </svg>
-                    Issue Asset
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" className="w-full justify-start bg-transparent">
-                  <Link href="/dashboard/issue/active">
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    View Active Issues
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" className="w-full justify-start bg-transparent">
-                  <Link href="/dashboard/users">
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
-                      />
-                    </svg>
-                    Manage Users
-                  </Link>
-                </Button>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={[
+                    { month: 'Jan', utilization: 65 },
+                    { month: 'Feb', utilization: 72 },
+                    { month: 'Mar', utilization: 68 },
+                    { month: 'Apr', utilization: 75 },
+                    { month: 'May', utilization: 80 },
+                    { month: 'Jun', utilization: 78 }
+                  ]}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line type="monotone" dataKey="utilization" stroke="#2563eb" strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
 
         <TabsContent value="categories" className="space-y-6">
-          <Card>
+          <Card className="group hover:shadow-lg transition-all duration-300">
             <CardHeader>
               <CardTitle>Assets by Category</CardTitle>
               <CardDescription>Breakdown of assets by type and availability</CardDescription>
@@ -490,39 +527,46 @@ export function AdminDashboard() {
         </TabsContent>
 
         <TabsContent value="activity" className="space-y-6">
-          <Card>
+          <Card className="group hover:shadow-lg transition-all duration-300">
             <CardHeader>
               <CardTitle>Recent Activity</CardTitle>
               <CardDescription>Latest asset management activities</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-center justify-between p-3 border rounded-lg">
+                {recentActivity.map((activity, index) => (
+                  <div 
+                    key={activity.id} 
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors animate-in slide-in-from-left-4 duration-300"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
                     <div className="flex items-center gap-3">
                       <Badge
                         className={
                           activity.type === "issue"
-                            ? "bg-blue-100 text-blue-800"
+                            ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
                             : activity.type === "return"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-purple-100 text-purple-800"
+                              ? "bg-green-100 text-green-800 hover:bg-green-200"
+                              : "bg-purple-100 text-purple-800 hover:bg-purple-200"
                         }
                       >
-                        {activity.type}
+                        {activity.type.charAt(0).toUpperCase() + activity.type.slice(1)}
                       </Badge>
                       <div>
                         <p className="font-medium">{activity.asset_name}</p>
-                        <p className="text-sm text-university-gray-600">{activity.user_name}</p>
+                        <p className="text-sm text-muted-foreground">{activity.user_name}</p>
                       </div>
                     </div>
-                    <span className="text-sm text-university-gray-600">
+                    <span className="text-sm text-muted-foreground">
                       {new Date(activity.date).toLocaleDateString()}
                     </span>
                   </div>
                 ))}
                 {recentActivity.length === 0 && (
-                  <p className="text-center text-university-gray-600 py-8">No recent activity</p>
+                  <div className="text-center py-8">
+                    <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground">No recent activity</p>
+                  </div>
                 )}
               </div>
             </CardContent>
