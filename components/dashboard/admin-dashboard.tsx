@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator"
 import { Calendar, TrendingUp, Users, Package, AlertTriangle, Wrench, Archive, Clock } from "lucide-react"
 import Link from "next/link"
 import { toast } from "@/hooks/use-toast"
+import { PageHeader } from "./page-header"
 
 interface DashboardStats {
   totalAssets: number
@@ -217,29 +218,27 @@ export function AdminDashboard() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Admin Dashboard
-          </h1>
-          <p className="text-muted-foreground mt-1">Comprehensive overview of asset management system</p>
-        </div>
-        <div className="flex gap-2">
-          <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-            <Link href="/dashboard/assets/register">
-              <Package className="w-4 h-4 mr-2" />
-              Add Asset
-            </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href="/dashboard/issue">
-              <Clock className="w-4 h-4 mr-2" />
-              Issue Asset
-            </Link>
-          </Button>
-        </div>
-      </div>
+      {/* Page Header */}
+      <PageHeader
+        title="Admin Dashboard"
+        description="Comprehensive overview of asset management system"
+        actions={
+          <div className="flex gap-2">
+            <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+              <Link href="/dashboard/assets/register">
+                <Package className="w-4 h-4 mr-2" />
+                Add Asset
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/dashboard/issue">
+                <Clock className="w-4 h-4 mr-2" />
+                Issue Asset
+              </Link>
+            </Button>
+          </div>
+        }
+      />
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
