@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator"
 import { Clock, Monitor, AlertTriangle, Package, Search, Plus, Eye } from "lucide-react"
 import Link from "next/link"
 import { toast } from "@/hooks/use-toast"
+import { PageHeader } from "./page-header"
 
 interface StaffStats {
   myActiveIssues: number
@@ -104,21 +105,19 @@ export function StaffDashboard() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            My Dashboard
-          </h1>
-          <p className="text-muted-foreground mt-1">Track your asset assignments and requests</p>
-        </div>
-        <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-          <Link href="/dashboard/request">
-            <Plus className="w-4 h-4 mr-2" />
-            Request Asset
-          </Link>
-        </Button>
-      </div>
+      {/* Page Header */}
+      <PageHeader
+        title="My Dashboard"
+        description="Track your asset assignments and requests"
+        actions={
+          <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+            <Link href="/dashboard/request">
+              <Plus className="w-4 h-4 mr-2" />
+              Request Asset
+            </Link>
+          </Button>
+        }
+      />
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
