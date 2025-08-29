@@ -176,13 +176,6 @@ export function Sidebar({ isOpen, onToggle, userRole }: SidebarProps) {
 
     const commonItems: NavItem[] = [
       {
-        title: "Asset Directory",
-        href: "/dashboard/assets",
-        icon: <Building2 className="w-4 h-4" />,
-        description: "Browse all assets",
-        role: "all"
-      },
-      {
         title: "Calendar",
         href: "/dashboard/calendar",
         icon: <Calendar className="w-4 h-4" />,
@@ -191,13 +184,24 @@ export function Sidebar({ isOpen, onToggle, userRole }: SidebarProps) {
       }
     ]
 
-    return [
-      ...baseItems,
-      ...(userRole === "admin" ? adminItems : []),
-      ...(userRole === "technician" ? technicianItems : []),
-      ...(userRole === "staff" ? staffItems : []),
-      ...commonItems
-    ]
+    // Build navigation items based on role, avoiding duplicates
+    let navItems = [...baseItems]
+    
+    if (userRole === "admin") {
+      navItems.push(...adminItems)
+    } else if (userRole === "technician") {
+      navItems.push(...technicianItems)
+    } else if (userRole === "staff") {
+      navItems.push(...staffItems)
+    }
+    
+    // Add common items that don't conflict with role-specific items
+    navItems.push(...commonItems)
+    
+    // Debug: Log navigation items to check for duplicates
+    console.log("Navigation items for role:", userRole, navItems.map(item => ({ href: item.href, role: item.role, title: item.title })))
+    
+    return navItems
   }
 
   const navItems = getNavItems()
@@ -268,14 +272,14 @@ export function Sidebar({ isOpen, onToggle, userRole }: SidebarProps) {
         {/* Navigation */}
         <ScrollArea className="h-[calc(100vh-4rem)]">
           <div className="p-4 space-y-2">
-            {navItems.map((item) => {
+            {navItems.map((item, index) => {
               const active = isActive(item.href)
               const showItem = item.role === "all" || item.role === userRole
               
               if (!showItem) return null
 
               return (
-                <Link key={item.href} href={item.href}>
+                <Link key={`${item.role}-${item.href}-${index}`} href={item.href}>
                   <div
                     className={cn(
                       "group flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer",
