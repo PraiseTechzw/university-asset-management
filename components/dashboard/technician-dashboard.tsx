@@ -5,7 +5,11 @@ import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+import { Separator } from "@/components/ui/separator"
+import { TrendingUp, Clock, AlertTriangle, Wrench, QrCode, Package, Eye } from "lucide-react"
 import Link from "next/link"
+import { toast } from "@/hooks/use-toast"
 
 interface TechnicianStats {
   availableAssets: number
@@ -65,203 +69,303 @@ export function TechnicianDashboard() {
       setStats((prev) => ({ ...prev, overdueAssets: overdue }))
     } catch (error) {
       console.error("Error fetching technician data:", error)
+      toast({
+        title: "❌ Error",
+        description: "Failed to load dashboard data. Please refresh the page.",
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }
   }
 
+  const getUtilizationRate = () => {
+    const total = stats.availableAssets + stats.issuedAssets + stats.maintenanceAssets
+    if (total === 0) return 0
+    return Math.round(((stats.issuedAssets + stats.maintenanceAssets) / total) * 100)
+  }
+
   if (isLoading) {
-    return <div>Loading...</div>
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-university-blue-900">Technician Dashboard</h1>
-          <p className="text-university-gray-600 mt-1">Manage asset operations and maintenance</p>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Technician Dashboard
+          </h1>
+          <p className="text-muted-foreground mt-1">Manage asset operations and maintenance</p>
         </div>
         <div className="flex gap-2">
-          <Button asChild>
-            <Link href="/dashboard/issue/scan">Quick Scan</Link>
+          <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+            <Link href="/dashboard/issue/scan">
+              <QrCode className="w-4 h-4 mr-2" />
+              Quick Scan
+            </Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/dashboard/issue">Issue Asset</Link>
+            <Link href="/dashboard/issue">
+              <Package className="w-4 h-4 mr-2" />
+              Issue Asset
+            </Link>
           </Button>
         </div>
       </div>
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
+        <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-105">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Available Assets</CardTitle>
-            <svg className="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+            <TrendingUp className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.availableAssets}</div>
+            <div className="text-2xl font-bold text-green-600">{stats.availableAssets.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">Ready to issue</p>
+            <Progress 
+              value={stats.availableAssets + stats.issuedAssets + stats.maintenanceAssets > 0 ? 
+                (stats.availableAssets / (stats.availableAssets + stats.issuedAssets + stats.maintenanceAssets)) * 100 : 0} 
+              className="mt-2" 
+            />
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-105">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Currently Issued</CardTitle>
-            <svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+            <Clock className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.issuedAssets}</div>
+            <div className="text-2xl font-bold text-blue-600">{stats.issuedAssets.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">In use</p>
+            <Progress 
+              value={stats.availableAssets + stats.issuedAssets + stats.maintenanceAssets > 0 ? 
+                (stats.issuedAssets / (stats.availableAssets + stats.issuedAssets + stats.maintenanceAssets)) * 100 : 0} 
+              className="mt-2" 
+            />
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-105">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Overdue Returns</CardTitle>
-            <svg className="h-4 w-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-              />
-            </svg>
+            <AlertTriangle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.overdueAssets}</div>
+            <div className="text-2xl font-bold text-red-600">{stats.overdueAssets.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">Need attention</p>
+            <Progress 
+              value={stats.issuedAssets > 0 ? (stats.overdueAssets / stats.issuedAssets) * 100 : 0} 
+              className="mt-2" 
+            />
+          </CardContent>
+        </Card>
+
+        <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-105">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Maintenance</CardTitle>
+            <Wrench className="h-4 w-4 text-yellow-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-600">{stats.maintenanceAssets.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">Under repair</p>
+            <Progress 
+              value={stats.availableAssets + stats.issuedAssets + stats.maintenanceAssets > 0 ? 
+                (stats.maintenanceAssets / (stats.availableAssets + stats.issuedAssets + stats.maintenanceAssets)) * 100 : 0} 
+              className="mt-2" 
+            />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* System Overview */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-blue-600" />
+              System Overview
+            </CardTitle>
+            <CardDescription>Asset utilization and operational metrics</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">{getUtilizationRate()}%</div>
+                <p className="text-sm text-muted-foreground">Asset Utilization</p>
+              </div>
+              <div className="text-center p-4 bg-green-50 dark:bg-green-950/20 rounded-lg">
+                <div className="text-2xl font-bold text-green-600">{stats.availableAssets}</div>
+                <p className="text-sm text-muted-foreground">Available for Issue</p>
+              </div>
+            </div>
+            <Separator />
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span>Total Assets</span>
+                <span className="font-medium">{stats.availableAssets + stats.issuedAssets + stats.maintenanceAssets}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Issued Assets</span>
+                <span className="font-medium">{stats.issuedAssets}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Maintenance</span>
+                <span className="font-medium">{stats.maintenanceAssets}</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Maintenance</CardTitle>
-            <svg className="h-4 w-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-              />
-            </svg>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <QrCode className="w-5 h-5 text-purple-600" />
+              Quick Actions
+            </CardTitle>
+            <CardDescription>Common technician tasks</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.maintenanceAssets}</div>
-            <p className="text-xs text-muted-foreground">Under repair</p>
+          <CardContent className="space-y-3">
+            <Button asChild className="w-full justify-start bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+              <Link href="/dashboard/issue/scan">
+                <QrCode className="w-4 h-4 mr-2" />
+                Quick Scan
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full justify-start">
+              <Link href="/dashboard/issue">
+                <Package className="w-4 h-4 mr-2" />
+                Issue Asset
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full justify-start">
+              <Link href="/dashboard/issue/active">
+                <Eye className="w-4 h-4 mr-2" />
+                View Active Issues
+              </Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
 
       {/* Recent Issues */}
-      <Card>
+      <Card className="group hover:shadow-lg transition-all duration-300">
         <CardHeader>
           <CardTitle>Recent Issues</CardTitle>
           <CardDescription>Latest asset assignments requiring attention</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {recentIssues.map((issue) => {
+            {recentIssues.map((issue, index) => {
               const isOverdue = new Date(issue.expected_return_date) < new Date()
               return (
-                <div key={issue.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
+                <div 
+                  key={issue.id} 
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors animate-in slide-in-from-left-4 duration-300"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-950/20 rounded-lg flex items-center justify-center">
+                      <Package className="w-6 h-6 text-blue-600" />
+                    </div>
                     <div>
-                      <p className="font-medium">{issue.asset.name}</p>
-                      <p className="text-sm text-university-gray-600 font-mono">{issue.asset.asset_code}</p>
-                      <p className="text-sm text-university-gray-600">To: {issue.issued_to_profile.full_name}</p>
+                      <h4 className="font-medium">{issue.asset?.name || "Unknown Asset"}</h4>
+                      <p className="text-sm text-muted-foreground font-mono">{issue.asset?.asset_code || "No Code"}</p>
+                      <p className="text-sm text-muted-foreground">
+                        To: {issue.issued_to_profile?.full_name || "Unknown User"}
+                      </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-university-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       Due: {new Date(issue.expected_return_date).toLocaleDateString()}
                     </p>
-                    {isOverdue && <Badge className="bg-red-100 text-red-800">Overdue</Badge>}
+                    {isOverdue && (
+                      <Badge className="bg-red-100 text-red-800 hover:bg-red-200">
+                        Overdue
+                      </Badge>
+                    )}
                   </div>
                 </div>
               )
             })}
-            {recentIssues.length === 0 && <p className="text-center text-university-gray-600 py-8">No active issues</p>}
+            {recentIssues.length === 0 && (
+              <div className="text-center py-8">
+                <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-muted-foreground mb-2">No active issues</h3>
+                <p className="text-muted-foreground">All assets are properly managed.</p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Quick Actions */}
+      {/* Quick Actions Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card>
+        <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-105">
           <CardHeader>
-            <CardTitle className="text-lg">Quick Scan</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <QrCode className="w-5 h-5 text-blue-600" />
+              Quick Scan
+            </CardTitle>
             <CardDescription>Scan QR codes for instant operations</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button asChild className="w-full">
+            <Button asChild className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
               <Link href="/dashboard/issue/scan">
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
-                  />
-                </svg>
+                <QrCode className="w-4 h-4 mr-2" />
                 Start Scanning
               </Link>
             </Button>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-105">
           <CardHeader>
-            <CardTitle className="text-lg">Issue Asset</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Package className="w-5 h-5 text-green-600" />
+              Issue Asset
+            </CardTitle>
             <CardDescription>Assign assets to staff members</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button asChild variant="outline" className="w-full bg-transparent">
+            <Button asChild variant="outline" className="w-full">
               <Link href="/dashboard/issue">
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
+                <Package className="w-4 h-4 mr-2" />
                 Issue Asset
               </Link>
             </Button>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-105">
           <CardHeader>
-            <CardTitle className="text-lg">Active Issues</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Eye className="w-5 h-5 text-purple-600" />
+              Active Issues
+            </CardTitle>
             <CardDescription>Manage current asset assignments</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button asChild variant="outline" className="w-full bg-transparent">
+            <Button asChild variant="outline" className="w-full">
               <Link href="/dashboard/issue/active">
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+                <Eye className="w-4 h-4 mr-2" />
                 View Issues
               </Link>
             </Button>
