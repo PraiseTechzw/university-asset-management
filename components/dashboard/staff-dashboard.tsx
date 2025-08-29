@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
-import { Clock, Monitor, AlertTriangle, Package, Search, Plus, Eye } from "lucide-react"
+import { Clock, Monitor, AlertTriangle, Package, Search, Plus, Eye, User } from "lucide-react"
 import Link from "next/link"
 import { toast } from "@/hooks/use-toast"
 import { PageHeader } from "./page-header"
@@ -118,6 +118,33 @@ export function StaffDashboard() {
           </Button>
         }
       />
+
+      {/* Welcome Message */}
+      <Card className="border-0 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <Badge className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300 px-3 py-1">
+                  <User className="w-4 h-4 mr-1" />
+                  Staff
+                </Badge>
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                Welcome to Your Dashboard
+              </h2>
+              <p className="text-muted-foreground">
+                Manage your asset requests and track current assignments
+              </p>
+            </div>
+            <div className="hidden md:block">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+                <User className="w-8 h-8 text-white" />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

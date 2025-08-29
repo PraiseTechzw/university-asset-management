@@ -187,38 +187,6 @@ export function DashboardContent() {
 
     const renderDashboard = () => (
       <div className="space-y-6 animate-in fade-in duration-500">
-        {/* Welcome Header */}
-        <Card className="border-0 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <Badge className={`${getRoleColor(userProfile.role)} px-3 py-1`}>
-                    {getRoleIcon(userProfile.role)}
-                    {userProfile.role.charAt(0).toUpperCase() + userProfile.role.slice(1)}
-                  </Badge>
-                  {userProfile.department && (
-                    <Badge variant="outline" className="px-3 py-1">
-                      {userProfile.department}
-                    </Badge>
-                  )}
-                </div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  Welcome back, {userProfile.full_name}!
-                </h1>
-                <p className="text-muted-foreground">
-                  {getRoleDescription(userProfile.role)}
-                </p>
-              </div>
-              <div className="hidden md:block">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-                  <Package className="w-8 h-8 text-white" />
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Role-based Dashboard */}
         {userProfile.role === "admin" && <AdminDashboard />}
         {userProfile.role === "technician" && <TechnicianDashboard />}

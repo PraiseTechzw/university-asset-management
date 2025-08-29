@@ -127,6 +127,33 @@ export function TechnicianDashboard() {
         }
       />
 
+      {/* Welcome Message */}
+      <Card className="border-0 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300 px-3 py-1">
+                  <Wrench className="w-4 h-4 mr-1" />
+                  Technician
+                </Badge>
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                Welcome to the Technician Dashboard
+              </h2>
+              <p className="text-muted-foreground">
+                Handle asset operations, maintenance, and user assignments efficiently
+              </p>
+            </div>
+            <div className="hidden md:block">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+                <Wrench className="w-8 h-8 text-white" />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-105">
