@@ -26,12 +26,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const supabase = createClient()
 
   useEffect(() => {
+    let mounted = true
+
     // Get initial session
     const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+          console.error("Error getting initial session:", error)
+          if (mounted) {
+            setLoading(false)
+          }
+          return
+        }
+
+        if (mounted) {
+          setSession(session)
+          setUser(session?.user ?? null)
+          setLoading(false)
+        }
+      } catch (error) {
+        console.error("Error in getInitialSession:", error)
+        if (mounted) {
+          setLoading(false)
+        }
+      }
     }
 
     getInitialSession()
@@ -39,66 +59,85 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setSession(session)
-        setUser(session?.user ?? null)
-        setLoading(false)
+        if (!mounted) return
 
-        if (event === "SIGNED_IN" && session?.user) {
-          // Check if user has @cut.ac.zw domain
-          if (!session.user.email?.endsWith("@cut.ac.zw")) {
+        try {
+          setSession(session)
+          setUser(session?.user ?? null)
+
+          if (event === "SIGNED_IN" && session?.user) {
+            // Check if user has @cut.ac.zw domain
+            if (!session.user.email?.endsWith("@cut.ac.zw")) {
+              toast({
+                title: "❌ Access Denied",
+                description: "Only Chinhoyi University accounts can access this system.",
+                variant: "destructive",
+              })
+              await signOut()
+              return
+            }
+
+            // Get or create user profile
+            await ensureUserProfile(session.user)
+            
             toast({
-              title: "❌ Access Denied",
-              description: "Only Chinhoyi University accounts can access this system.",
-              variant: "destructive",
+              title: "🎉 Welcome back!",
+              description: "Successfully signed in.",
             })
-            await signOut()
-            return
+
+            // Redirect to dashboard
+            router.push("/dashboard")
+          } else if (event === "SIGNED_OUT") {
+            router.push("/")
           }
-
-          // Get or create user profile
-          await ensureUserProfile(session.user)
-          
-          toast({
-            title: "🎉 Welcome back!",
-            description: "Successfully signed in.",
-          })
-
-          // Redirect to dashboard
-          router.push("/dashboard")
-        } else if (event === "SIGNED_OUT") {
-          router.push("/")
+        } catch (error) {
+          console.error("Error in auth state change:", error)
+        } finally {
+          if (mounted) {
+            setLoading(false)
+          }
         }
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [router])
 
   const ensureUserProfile = async (user: User) => {
     try {
       // Check if profile exists
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", user.id)
         .single()
 
-      if (!profile) {
-        // Create new profile
-        const { error: profileError } = await supabase.from("profiles").insert({
-          id: user.id,
-          email: user.email,
-          full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
-          role: "staff", // Default role
-          created_at: new Date().toISOString(),
-        })
+      if (profileError) {
+        // If profile doesn't exist, create one with default role
+        if (profileError.code === "PGRST116") {
+          const { error: createError } = await supabase.from("profiles").insert({
+            id: user.id,
+            email: user.email,
+            full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "User",
+            role: "staff", // Default role
+            created_at: new Date().toISOString(),
+          })
 
-        if (profileError) {
-          console.error("Profile creation error:", profileError)
+          if (createError) {
+            console.error("Profile creation error:", createError)
+            throw createError
+          }
+        } else {
+          console.error("Profile fetch error:", profileError)
+          throw profileError
         }
       }
     } catch (error) {
       console.error("Error ensuring user profile:", error)
+      // Don't throw here, just log the error
     }
   }
 

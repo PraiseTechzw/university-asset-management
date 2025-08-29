@@ -39,7 +39,10 @@ export function PageHeader({
 
   const generateBreadcrumbs = () => {
     const paths = pathname.split('/').filter(Boolean)
-    const breadcrumbItems = [
+    const breadcrumbItems: Array<{
+      label: string
+      href?: string
+    }> = [
       {
         label: "Home",
         href: "/dashboard"
@@ -74,8 +77,8 @@ export function PageHeader({
               {index === finalBreadcrumbs.length - 1 ? (
                 <BreadcrumbPage>{item.label}</BreadcrumbPage>
               ) : (
-                <BreadcrumbLink asChild>
-                  <Link href={item.href || "#"}>{item.label}</Link>
+                <BreadcrumbLink href={item.href || "#"}>
+                  {item.label}
                 </BreadcrumbLink>
               )}
               {index < finalBreadcrumbs.length - 1 && <BreadcrumbSeparator />}
