@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { AdminDashboard } from "./admin-dashboard"
 import { TechnicianDashboard } from "./technician-dashboard"
@@ -27,13 +27,16 @@ export function DashboardContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Debug: Log authentication states
+  console.log("DashboardContent - Auth states:", { user: !!user, authLoading, isLoading, error })
+
   useEffect(() => {
     if (user && !authLoading) {
       fetchUserProfile()
     }
-  }, [user, authLoading])
+  }, [user, authLoading, fetchUserProfile])
 
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     try {
       setIsLoading(true)
       setError(null)
@@ -86,7 +89,7 @@ export function DashboardContent() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [user?.id, user?.email, user?.user_metadata?.full_name])
 
   // Show loading state while checking authentication
   if (authLoading) {
@@ -96,7 +99,8 @@ export function DashboardContent() {
           <div className="mx-auto w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
             <Loader2 className="w-10 h-10 text-white animate-spin" />
           </div>
-          <p className="text-lg text-muted-foreground">Loading dashboard...</p>
+          <p className="text-lg text-muted-foreground">Verifying authentication...</p>
+          <p className="text-sm text-muted-foreground">This may take a few moments</p>
         </div>
       </div>
     )

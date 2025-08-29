@@ -28,10 +28,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true
 
-    // Get initial session
+    // Get initial session with timeout
     const getInitialSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession()
+        // Add timeout to prevent getting stuck
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error("Session timeout")), 10000) // 10 second timeout
+        })
+
+        const sessionPromise = supabase.auth.getSession()
+        
+        const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise]) as any
         
         if (error) {
           console.error("Error getting initial session:", error)
