@@ -26,9 +26,23 @@ export function DashboardContent() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [authTimeout, setAuthTimeout] = useState(false)
 
   // Debug: Log authentication states
-  console.log("DashboardContent - Auth states:", { user: !!user, authLoading, isLoading, error })
+  console.log("DashboardContent - Auth states:", { user: !!user, authLoading, isLoading, error, authTimeout })
+
+  // Add timeout for authentication
+  useEffect(() => {
+    if (authLoading) {
+      const timeout = setTimeout(() => {
+        setAuthTimeout(true)
+      }, 15000) // 15 second timeout
+
+      return () => clearTimeout(timeout)
+    } else {
+      setAuthTimeout(false)
+    }
+  }, [authLoading])
 
   useEffect(() => {
     if (user && !authLoading) {
