@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client"
 import { AdminDashboard } from "./admin-dashboard"
 import { TechnicianDashboard } from "./technician-dashboard"
 import { StaffDashboard } from "./staff-dashboard"
+import { DashboardLayout } from "./dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -143,17 +144,17 @@ export function DashboardContent() {
     )
   }
 
-  // Show role-based dashboard
+  // Show role-based dashboard with layout
   if (userProfile) {
     const getRoleIcon = (role: string) => {
-    switch (role) {
-      case "admin":
+      switch (role) {
+        case "admin":
           return <Shield className="w-5 h-5 text-purple-600" />
-      case "technician":
+        case "technician":
           return <Wrench className="w-5 h-5 text-blue-600" />
         case "staff":
           return <User className="w-5 h-5 text-green-600" />
-      default:
+        default:
           return <User className="w-5 h-5 text-gray-600" />
       }
     }
@@ -184,7 +185,7 @@ export function DashboardContent() {
       }
     }
 
-    return (
+    const renderDashboard = () => (
       <div className="space-y-6 animate-in fade-in duration-500">
         {/* Welcome Header */}
         <Card className="border-0 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
@@ -211,7 +212,7 @@ export function DashboardContent() {
               </div>
               <div className="hidden md:block">
                 <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-                  <Package className="w-10 h-10 text-white" />
+                  <Package className="w-8 h-8 text-white" />
                 </div>
               </div>
             </div>
@@ -223,6 +224,12 @@ export function DashboardContent() {
         {userProfile.role === "technician" && <TechnicianDashboard />}
         {userProfile.role === "staff" && <StaffDashboard />}
       </div>
+    )
+
+    return (
+      <DashboardLayout userRole={userProfile.role}>
+        {renderDashboard()}
+      </DashboardLayout>
     )
   }
 
