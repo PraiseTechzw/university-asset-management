@@ -1,0 +1,322 @@
+"use client"
+
+import type React from "react"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { toast } from "@/hooks/use-toast"
+import { Confetti, useConfetti } from "@/components/ui/confetti"
+import { Loader2 } from "lucide-react"
+
+interface AssetFormData {
+  assetCode: string
+  name: string
+  category: string
+  brand: string
+  model: string
+  serialNumber: string
+  purchaseDate: string
+  purchasePrice: string
+  warrantyExpiry: string
+  condition: string
+  location: string
+  description: string
+}
+
+export function AssetRegistrationForm() {
+  const [formData, setFormData] = useState<AssetFormData>({
+    assetCode: "",
+    name: "",
+    category: "",
+    brand: "",
+    model: "",
+    serialNumber: "",
+    purchaseDate: "",
+    purchasePrice: "",
+    warrantyExpiry: "",
+    condition: "excellent",
+    location: "",
+    description: "",
+  })
+  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
+  const { isActive: confettiActive, trigger: triggerConfetti } = useConfetti()
+
+  const generateAssetCode = () => {
+    const categoryPrefix =
+      {
+        projector: "PROJ",
+        laptop: "LAP",
+        desktop: "DESK",
+        printer: "PRINT",
+        camera: "CAM",
+        other: "OTHER",
+      }[formData.category] || "ASSET"
+
+    const randomNum = Math.floor(Math.random() * 1000)
+      .toString()
+      .padStart(3, "0")
+    const code = `CUT-${categoryPrefix}-${randomNum}`
+    setFormData({ ...formData, assetCode: code })
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+
+    try {
+      const supabase = createClient()
+
+      // Get current user
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) throw new Error("Not authenticated")
+
+      // Generate QR code URL (placeholder for now)
+      const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(formData.assetCode)}`
+
+      const { error } = await supabase.from("assets").insert({
+        asset_code: formData.assetCode,
+        name: formData.name,
+        category: formData.category,
+        brand: formData.brand,
+        model: formData.model,
+        serial_number: formData.serialNumber,
+        purchase_date: formData.purchaseDate || null,
+        purchase_price: formData.purchasePrice ? Number.parseFloat(formData.purchasePrice) : null,
+        warranty_expiry: formData.warrantyExpiry || null,
+        condition: formData.condition,
+        location: formData.location,
+        description: formData.description,
+        qr_code_url: qrCodeUrl,
+        created_by: user.id,
+      })
+
+      if (error) throw error
+
+      // Trigger confetti animation
+      triggerConfetti()
+
+      toast({
+        title: "🎉 Asset registered successfully!",
+        description: `Asset ${formData.assetCode} has been added to the inventory.`,
+      })
+
+      // Wait a bit for confetti to show before redirecting
+      setTimeout(() => {
+        router.push("/dashboard/assets")
+      }, 2000)
+    } catch (error) {
+      console.error("Error registering asset:", error)
+      toast({
+        title: "❌ Error",
+        description: error instanceof Error ? error.message : "Failed to register asset",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <>
+      <Confetti isActive={confettiActive} />
+      <Card>
+        <CardHeader>
+          <CardTitle>Asset Information</CardTitle>
+          <CardDescription>Fill in the details for the new asset. All required fields must be completed.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="assetCode">Asset Code *</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="assetCode"
+                    value={formData.assetCode}
+                    onChange={(e) => setFormData({ ...formData, assetCode: e.target.value })}
+                    placeholder="CUT-PROJ-001"
+                    required
+                    disabled={isLoading}
+                  />
+                  <Button type="button" variant="outline" onClick={generateAssetCode} disabled={isLoading}>
+                    Generate
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="name">Asset Name *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Epson PowerLite Projector"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="category">Category *</Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) => setFormData({ ...formData, category: value })}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="projector">Projector</SelectItem>
+                    <SelectItem value="laptop">Laptop</SelectItem>
+                    <SelectItem value="desktop">Desktop</SelectItem>
+                    <SelectItem value="printer">Printer</SelectItem>
+                    <SelectItem value="camera">Camera</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="brand">Brand</Label>
+                <Input
+                  id="brand"
+                  value={formData.brand}
+                  onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                  placeholder="Epson"
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="model">Model</Label>
+                <Input
+                  id="model"
+                  value={formData.model}
+                  onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                  placeholder="PowerLite 1795F"
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="serialNumber">Serial Number</Label>
+                <Input
+                  id="serialNumber"
+                  value={formData.serialNumber}
+                  onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
+                  placeholder="EP1795F001"
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="purchaseDate">Purchase Date</Label>
+                <Input
+                  id="purchaseDate"
+                  type="date"
+                  value={formData.purchaseDate}
+                  onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="purchasePrice">Purchase Price (USD)</Label>
+                <Input
+                  id="purchasePrice"
+                  type="number"
+                  step="0.01"
+                  value={formData.purchasePrice}
+                  onChange={(e) => setFormData({ ...formData, purchasePrice: e.target.value })}
+                  placeholder="899.99"
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="warrantyExpiry">Warranty Expiry</Label>
+                <Input
+                  id="warrantyExpiry"
+                  type="date"
+                  value={formData.warrantyExpiry}
+                  onChange={(e) => setFormData({ ...formData, warrantyExpiry: e.target.value })}
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="condition">Condition *</Label>
+                <Select
+                  value={formData.condition}
+                  onValueChange={(value) => setFormData({ ...formData, condition: value })}
+                  disabled={isLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="excellent">Excellent</SelectItem>
+                    <SelectItem value="good">Good</SelectItem>
+                    <SelectItem value="fair">Fair</SelectItem>
+                    <SelectItem value="poor">Poor</SelectItem>
+                    <SelectItem value="damaged">Damaged</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="location">Location</Label>
+                <Input
+                  id="location"
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  placeholder="Lecture Hall A"
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Additional details about the asset..."
+                rows={3}
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="flex gap-4">
+              <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-university-blue-600 hover:bg-university-blue-700" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Registering...
+                  </>
+                ) : (
+                  "Register Asset"
+                )}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </>
+  )
+}
