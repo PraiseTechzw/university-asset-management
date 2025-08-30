@@ -44,13 +44,9 @@ export default async function AssetsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-university-blue-900">Asset Management</h1>
-          <p className="text-university-gray-600 mt-1">Track and manage university assets</p>
-        </div>
         {canManageAssets && (
           <Link href="/dashboard/assets/register">
-            <Button className="bg-university-blue-600 hover:bg-university-blue-700">
+            <Button className="bg-blue-600 hover:bg-blue-700">
               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
