@@ -217,9 +217,9 @@ export function Sidebar({ isOpen, onToggle, userRole }: SidebarProps) {
       {/* Sidebar */}
       <div
         className={cn(
-          "fixed lg:relative left-0 top-0 z-50 h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ease-in-out",
+          "fixed lg:sticky lg:top-0 lg:flex-shrink-0 left-0 top-0 z-50 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ease-in-out",
           isOpen ? "translate-x-0" : "-translate-x-full",
-          "lg:translate-x-0 lg:static lg:z-auto lg:flex-shrink-0",
+          "lg:translate-x-0 lg:static lg:z-auto",
           isCollapsed ? "w-16" : "w-64"
         )}
       >

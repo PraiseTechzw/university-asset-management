@@ -131,7 +131,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       isLoading,
       error
     }}>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex overflow-hidden">
         {/* Sidebar */}
         <Sidebar 
           isOpen={sidebarOpen} 
@@ -140,7 +140,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         />
 
         {/* Main Content */}
-        <div className="flex-1 min-w-0 transition-all duration-300">
+        <div className="flex-1 min-w-0 lg:ml-0 transition-all duration-300 overflow-auto">
           {/* Mobile Header */}
           <MobileHeader 
             onMenuToggle={toggleSidebar}
