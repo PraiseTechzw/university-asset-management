@@ -28,7 +28,9 @@ import {
   AlertTriangle,
   Archive,
   ChevronRight,
-  Home
+  Home,
+  Building2,
+  Tag
 } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { toast } from "@/hooks/use-toast"
@@ -100,6 +102,34 @@ export function Sidebar({ isOpen, onToggle, userRole }: SidebarProps) {
         href: "/dashboard/reports",
         icon: <BarChart3 className="w-4 h-4" />,
         description: "System reports and insights",
+        role: "admin"
+      },
+      {
+        title: "Maintenance",
+        href: "/dashboard/maintenance",
+        icon: <Wrench className="w-4 h-4" />,
+        description: "Asset maintenance records",
+        role: "admin"
+      },
+      {
+        title: "Audit Logs",
+        href: "/dashboard/audit",
+        icon: <FileText className="w-4 h-4" />,
+        description: "System activity logs",
+        role: "admin"
+      },
+      {
+        title: "Departments",
+        href: "/dashboard/departments",
+        icon: <Building2 className="w-4 h-4" />,
+        description: "Manage departments",
+        role: "admin"
+      },
+      {
+        title: "Asset Categories",
+        href: "/dashboard/categories",
+        icon: <Tag className="w-4 h-4" />,
+        description: "Manage asset categories",
         role: "admin"
       },
       {

@@ -15,6 +15,7 @@ interface DashboardContextType {
   userRole: "admin" | "technician" | "staff" | null
   isLoading: boolean
   error: string | null
+  refreshProfile: () => Promise<void>
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined)

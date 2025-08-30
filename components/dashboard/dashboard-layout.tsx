@@ -31,61 +31,106 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen)
 
-  const fetchUserProfile = useCallback(async () => {
+  const refreshProfile = async () => {
     try {
       setIsLoading(true)
       setError(null)
+      // Re-fetch user profile
+      if (user?.id) {
+        const supabase = createClient()
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("id, email, full_name, role, department")
+          .eq("id", user.id)
+          .single()
 
-      const supabase = createClient()
-      
-      // Fetch user profile from profiles table
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user?.id)
-        .single()
-
-      if (profileError) {
-        console.error("Error fetching profile:", profileError)
-        
-        // If profile doesn't exist, create one with default role
-        if (profileError.code === "PGRST116") {
-          const { data: newProfile, error: createError } = await supabase
-            .from("profiles")
-            .insert({
-              id: user?.id,
-              email: user?.email,
-              full_name: user?.user_metadata?.full_name || user?.email?.split("@")[0] || "User",
-              role: "staff", // Default role
-              created_at: new Date().toISOString(),
-            })
-            .select()
-            .single()
-
-          if (createError) {
-            throw new Error("Failed to create user profile")
-          }
-
-          setUserProfile(newProfile)
-        } else {
-          throw new Error("Failed to fetch user profile")
+        if (error) {
+          console.error("Error refreshing profile:", error)
+          setError("Failed to refresh user profile")
+        } else if (profile) {
+          setUserProfile(profile)
         }
-      } else {
-        setUserProfile(profile)
       }
     } catch (error) {
-      console.error("Error in fetchUserProfile:", error)
-      setError(error instanceof Error ? error.message : "Failed to load user profile")
+      console.error("Error refreshing profile:", error)
     } finally {
       setIsLoading(false)
     }
-  }, [user?.id, user?.email, user?.user_metadata?.full_name])
+  }
 
   useEffect(() => {
-    if (user && !authLoading) {
-      fetchUserProfile()
+    let mounted = true
+
+    const fetchUserProfile = async () => {
+      try {
+        setIsLoading(true)
+        
+        // Check if we have cached profile data
+        const cachedProfile = localStorage.getItem('userProfile')
+        if (cachedProfile) {
+          try {
+            const profile = JSON.parse(cachedProfile)
+            const cacheAge = Date.now() - profile.timestamp
+            // Use cache if less than 5 minutes old
+            if (cacheAge < 5 * 60 * 1000) {
+              setUserProfile(profile.data)
+              setIsLoading(false)
+              return
+            }
+          } catch (e) {
+            // Invalid cache, continue with fetch
+          }
+        }
+
+        if (!user?.id) {
+          setIsLoading(false)
+          return
+        }
+
+        const supabase = createClient()
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("id, email, full_name, role, department")
+          .eq("id", user.id)
+          .single()
+
+        if (error) {
+          console.error("Error fetching profile:", error)
+          // Retry once for network issues
+          if (error.message?.includes('fetch') || error.message?.includes('network')) {
+            setTimeout(() => {
+              if (mounted) {
+                fetchUserProfile()
+              }
+            }, 2000)
+            return
+          }
+          setError("Failed to load user profile")
+        } else if (profile) {
+          // Cache the profile data
+          localStorage.setItem('userProfile', JSON.stringify({
+            data: profile,
+            timestamp: Date.now()
+          }))
+          
+          setUserProfile(profile)
+        }
+      } catch (error) {
+        console.error("Error in fetchUserProfile:", error)
+        setError("Failed to load user profile")
+      } finally {
+        if (mounted) {
+          setIsLoading(false)
+        }
+      }
     }
-  }, [user, authLoading, fetchUserProfile])
+
+    fetchUserProfile()
+
+    return () => {
+      mounted = false
+    }
+  }, [user?.id])
 
   // Show loading state while checking authentication or fetching profile
   if (authLoading || isLoading) {
@@ -98,6 +143,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <p className="text-lg text-muted-foreground">
             {authLoading ? "Verifying authentication..." : "Setting up your dashboard..."}
           </p>
+          <p className="text-sm text-gray-500">
+            {authLoading ? "Checking credentials..." : "Loading user profile..."}
+          </p>
+          {user && (
+            <p className="text-xs text-gray-400">
+              Logged in as: {user.email}
+            </p>
+          )}
         </div>
       </div>
     )
@@ -129,41 +182,34 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       userProfile,
       userRole: userProfile?.role || null,
       isLoading,
-      error
+      error,
+      refreshProfile
     }}>
       <div className="h-screen bg-gray-50 dark:bg-gray-900 flex overflow-hidden">
         {/* Sidebar */}
         <Sidebar 
-          isOpen={sidebarOpen} 
+          isOpen={sidebarOpen}
           onToggle={toggleSidebar}
           userRole={userProfile?.role}
         />
-
-        {/* Main Content */}
-        <div className="flex-1 min-w-0 lg:ml-0 transition-all duration-300 overflow-auto h-screen">
-          {/* Mobile Header */}
+        
+        {/* Main content */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Header */}
           <MobileHeader 
             onMenuToggle={toggleSidebar}
             userRole={userProfile?.role}
           />
-
-          {/* Page Content */}
-          <main className="min-h-full pb-20 lg:pb-6">
-            <div className="p-4 lg:p-6">
+          
+          {/* Page content */}
+          <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 dark:bg-gray-900">
+            <div className="container mx-auto px-4 py-6">
               {children}
             </div>
           </main>
-
-          {/* Mobile Bottom Navigation */}
+          
+          {/* Mobile bottom navigation */}
           <MobileBottomNav />
-
-          {/* Mobile Sidebar Overlay */}
-          {sidebarOpen && (
-            <div 
-              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-              onClick={toggleSidebar}
-            />
-          )}
         </div>
       </div>
     </DashboardProvider>

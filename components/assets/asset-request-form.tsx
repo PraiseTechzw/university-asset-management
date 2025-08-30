@@ -91,7 +91,7 @@ export function AssetRequestForm() {
       const { error } = await supabase.from("asset_requests").insert({
         requester_id: user.id,
         asset_category: formData.assetCategory,
-        asset_name: formData.assetName,
+        asset_name: formData.assetName === "any" ? null : formData.assetName,
         purpose: formData.purpose,
         requested_date: formData.requestedDate,
         expected_return_date: formData.expectedReturnDate,
@@ -210,7 +210,7 @@ export function AssetRequestForm() {
                         <SelectValue placeholder="Any available asset" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any available asset</SelectItem>
+                        <SelectItem value="any">Any available asset</SelectItem>
                         {getAssetsByCategory(formData.assetCategory).map((asset) => (
                           <SelectItem key={asset.id} value={asset.name}>
                             {asset.name} ({asset.asset_code})

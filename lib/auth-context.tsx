@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true
 
-    // Fast session check with caching
+    // Real authentication check
     const getInitialSession = async () => {
       try {
         // Check if we have a cached session first
@@ -48,16 +48,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
 
-        // Fast session fetch with timeout
-        const sessionPromise = supabase.auth.getSession()
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("Timeout")), 3000)
-        )
-
-        const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise]) as any
+        // Real session fetch
+        const { data: { session }, error } = await supabase.auth.getSession()
         
         if (error) {
-          console.error("Session error:", error)
           if (mounted) {
             setLoading(false)
             setInitialized(true)
@@ -72,7 +66,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setInitialized(true)
         }
       } catch (error) {
-        console.error("Session fetch error:", error)
+        // Only retry for network issues
+        if (error instanceof Error && 
+            (error.message.includes('fetch') || error.message.includes('network') || error.message.includes('Failed to fetch'))) {
+          // Retry once after a short delay
+          setTimeout(() => {
+            if (mounted) {
+              getInitialSession()
+            }
+          }, 1000)
+          return
+        }
+        
         if (mounted) {
           setLoading(false)
           setInitialized(true)
