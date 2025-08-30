@@ -28,8 +28,7 @@ export function DashboardContent() {
   const [error, setError] = useState<string | null>(null)
   const [authTimeout, setAuthTimeout] = useState(false)
 
-  // Debug: Log authentication states
-  console.log("DashboardContent - Auth states:", { user: !!user, authLoading, isLoading, error, authTimeout })
+
 
   // Add timeout for authentication
   useEffect(() => {
@@ -43,12 +42,6 @@ export function DashboardContent() {
       setAuthTimeout(false)
     }
   }, [authLoading])
-
-  useEffect(() => {
-    if (user && !authLoading) {
-      fetchUserProfile()
-    }
-  }, [user, authLoading, fetchUserProfile])
 
   const fetchUserProfile = useCallback(async () => {
     try {
@@ -105,6 +98,12 @@ export function DashboardContent() {
     }
   }, [user?.id, user?.email, user?.user_metadata?.full_name])
 
+  useEffect(() => {
+    if (user && !authLoading) {
+      fetchUserProfile()
+    }
+  }, [user, authLoading, fetchUserProfile])
+
   // Show loading state while checking authentication
   if (authLoading) {
     return (
@@ -115,6 +114,24 @@ export function DashboardContent() {
           </div>
           <p className="text-lg text-muted-foreground">Verifying authentication...</p>
           <p className="text-sm text-muted-foreground">This may take a few moments</p>
+          
+          {/* Timeout fallback */}
+          {authTimeout && (
+            <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-3">
+                Authentication is taking longer than expected
+              </p>
+              <Button 
+                onClick={() => window.location.reload()} 
+                variant="outline"
+                size="sm"
+                className="bg-yellow-100 hover:bg-yellow-200 border-yellow-300 text-yellow-800"
+              >
+                <Loader2 className="w-4 h-4 mr-2" />
+                Retry Authentication
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     )

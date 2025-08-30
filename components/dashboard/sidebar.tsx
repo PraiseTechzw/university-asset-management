@@ -198,8 +198,7 @@ export function Sidebar({ isOpen, onToggle, userRole }: SidebarProps) {
     // Add common items that don't conflict with role-specific items
     navItems.push(...commonItems)
     
-    // Debug: Log navigation items to check for duplicates
-    console.log("Navigation items for role:", userRole, navItems.map(item => ({ href: item.href, role: item.role, title: item.title })))
+
     
     return navItems
   }
