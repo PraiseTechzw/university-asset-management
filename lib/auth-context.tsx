@@ -22,28 +22,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [initialized, setInitialized] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
     let mounted = true
 
-    // Get initial session with timeout
+    // Fast session check with caching
     const getInitialSession = async () => {
       try {
-        // Add timeout to prevent getting stuck
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error("Session timeout")), 10000) // 10 second timeout
-        })
+        // Check if we have a cached session first
+        const cachedSession = localStorage.getItem('supabase.auth.token')
+        if (cachedSession) {
+          try {
+            const parsed = JSON.parse(cachedSession)
+            if (parsed && parsed.access_token) {
+              // Quick validation without full API call
+              setLoading(false)
+              setInitialized(true)
+              return
+            }
+          } catch (e) {
+            // Invalid cache, continue with normal flow
+          }
+        }
 
+        // Fast session fetch with timeout
         const sessionPromise = supabase.auth.getSession()
-        
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error("Timeout")), 3000)
+        )
+
         const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise]) as any
         
         if (error) {
-          console.error("Error getting initial session:", error)
+          console.error("Session error:", error)
           if (mounted) {
             setLoading(false)
+            setInitialized(true)
           }
           return
         }
@@ -52,11 +69,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(session)
           setUser(session?.user ?? null)
           setLoading(false)
+          setInitialized(true)
         }
       } catch (error) {
-        console.error("Error in getInitialSession:", error)
+        console.error("Session fetch error:", error)
         if (mounted) {
           setLoading(false)
+          setInitialized(true)
         }
       }
     }
@@ -84,8 +103,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               return
             }
 
-            // Get or create user profile
-            await ensureUserProfile(session.user)
+            // Get or create user profile (non-blocking)
+            ensureUserProfile(session.user).catch(console.error)
             
             toast({
               title: "🎉 Welcome back!",
@@ -102,6 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } finally {
           if (mounted) {
             setLoading(false)
+            setInitialized(true)
           }
         }
       }
@@ -135,16 +155,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           if (createError) {
             console.error("Profile creation error:", createError)
-            throw createError
+            // Don't throw, just log the error and continue
+            return
           }
         } else {
           console.error("Profile fetch error:", profileError)
-          throw profileError
+          // Don't throw, just log the error and continue
+          return
         }
       }
     } catch (error) {
       console.error("Error ensuring user profile:", error)
-      // Don't throw here, just log the error
+      // Don't throw here, just log the error and continue
+      // This prevents authentication from failing due to profile issues
     }
   }
 

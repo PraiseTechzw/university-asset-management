@@ -5,6 +5,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Toaster } from '@/components/ui/toaster'
 import { AuthProvider } from '@/lib/auth-context'
+import { AuthErrorBoundary } from '@/components/auth/auth-error-boundary'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -28,8 +29,10 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            {children}
-            <Toaster />
+            <AuthErrorBoundary>
+              {children}
+              <Toaster />
+            </AuthErrorBoundary>
           </AuthProvider>
         </ThemeProvider>
         <Analytics />
