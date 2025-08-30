@@ -27,7 +27,6 @@ import {
   Clock,
   AlertTriangle,
   Archive,
-  Building2,
   ChevronRight,
   Home
 } from "lucide-react"
@@ -217,7 +216,7 @@ export function Sidebar({ isOpen, onToggle, userRole }: SidebarProps) {
       {/* Sidebar */}
       <div
         className={cn(
-          "fixed lg:sticky lg:top-0 lg:flex-shrink-0 left-0 top-0 z-50 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ease-in-out",
+          "fixed lg:sticky lg:top-0 lg:flex-shrink-0 left-0 top-0 z-50 h-screen max-h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 transition-all duration-300 ease-in-out",
           isOpen ? "translate-x-0" : "-translate-x-full",
           "lg:translate-x-0 lg:static lg:z-auto",
           isCollapsed ? "w-16" : "w-64"
@@ -227,8 +226,12 @@ export function Sidebar({ isOpen, onToggle, userRole }: SidebarProps) {
         <div className="flex h-16 items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800">
           {!isCollapsed && (
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-white" />
+              <div className="w-8 h-8 flex items-center justify-center">
+                <img 
+                  src="/logo.png" 
+                  alt="Chinhoyi University of Technology" 
+                  className="w-8 h-8 object-contain"
+                />
               </div>
               <span className="font-bold text-lg bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 CUT
@@ -261,7 +264,7 @@ export function Sidebar({ isOpen, onToggle, userRole }: SidebarProps) {
         </div>
 
         {/* Navigation */}
-        <ScrollArea className="h-[calc(100vh-4rem)]">
+        <ScrollArea className="flex-1 overflow-hidden">
           <div className="p-4 space-y-2">
             {navItems.map((item, index) => {
               const active = isActive(item.href)

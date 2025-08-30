@@ -53,7 +53,7 @@ export default function ScanPage() {
         .from("assets")
         .select(`
           *,
-          current_issue:asset_issues!inner(
+          current_issue:asset_issues(
             issued_to_profile:profiles!asset_issues_issued_to_fkey(full_name),
             expected_return_date
           )

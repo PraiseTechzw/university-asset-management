@@ -8,9 +8,9 @@ import {
   Bell, 
   Search, 
   User,
-  Building2,
   Moon,
-  Sun
+  Sun,
+  Package
 } from "lucide-react"
 import { useTheme } from "next-themes"
 import { useAuth } from "@/lib/auth-context"
@@ -54,8 +54,12 @@ export function MobileHeader({ onMenuToggle, userRole }: MobileHeaderProps) {
           </Button>
           
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-white" />
+            <div className="w-8 h-8 flex items-center justify-center">
+              <img 
+                src="/logo.png" 
+                alt="Chinhoyi University of Technology" 
+                className="w-8 h-8 object-contain"
+              />
             </div>
             <span className="font-bold text-lg bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               CUT
@@ -144,7 +148,7 @@ export function MobileHeader({ onMenuToggle, userRole }: MobileHeaderProps) {
               size="sm"
               className="whitespace-nowrap text-xs h-8 px-3"
             >
-              <Building2 className="w-3 h-3 mr-1" />
+              <Package className="w-3 h-3 mr-1" />
               Assets
             </Button>
           )}

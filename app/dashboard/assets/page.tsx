@@ -24,7 +24,7 @@ export default async function AssetsPage() {
     .select(`
       *,
       created_by_profile:profiles!assets_created_by_fkey(full_name),
-      current_issue:asset_issues!inner(
+      current_issue:asset_issues(
         id,
         issued_to,
         issue_date,

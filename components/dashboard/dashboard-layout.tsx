@@ -131,7 +131,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       isLoading,
       error
     }}>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex overflow-hidden">
+      <div className="h-screen bg-gray-50 dark:bg-gray-900 flex overflow-hidden">
         {/* Sidebar */}
         <Sidebar 
           isOpen={sidebarOpen} 
@@ -140,7 +140,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         />
 
         {/* Main Content */}
-        <div className="flex-1 min-w-0 lg:ml-0 transition-all duration-300 overflow-auto">
+        <div className="flex-1 min-w-0 lg:ml-0 transition-all duration-300 overflow-auto h-screen">
           {/* Mobile Header */}
           <MobileHeader 
             onMenuToggle={toggleSidebar}
@@ -148,7 +148,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           />
 
           {/* Page Content */}
-          <main className="min-h-screen pb-20 lg:pb-6">
+          <main className="min-h-full pb-20 lg:pb-6">
             <div className="p-4 lg:p-6">
               {children}
             </div>

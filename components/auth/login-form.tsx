@@ -11,7 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAuth } from "@/lib/auth-context"
 import { toast } from "@/hooks/use-toast"
 import { Confetti, useConfetti } from "@/components/ui/confetti"
-import { Loader2, Mail, Lock, Shield, Building2, Eye, EyeOff, Sparkles, CheckCircle } from "lucide-react"
+import { Loader2, Mail, Lock, Shield, Eye, EyeOff, Sparkles, CheckCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export function LoginForm() {
@@ -90,8 +90,12 @@ export function LoginForm() {
 
           <CardHeader className="text-center space-y-4 relative z-10">
             <div className="mx-auto w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-2xl hover:scale-105 transition-transform duration-300 hover:rotate-3">
-              <Building2 className="w-10 h-10 text-white" />
-        </div>
+              <img 
+                src="/logo.png" 
+                alt="Chinhoyi University of Technology" 
+                className="w-12 h-12 object-contain"
+              />
+            </div>
 
             <div className="animate-in fade-in duration-700 delay-200">
               <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
