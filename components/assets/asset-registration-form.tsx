@@ -57,6 +57,13 @@ export function AssetRegistrationForm() {
     assetCode: false,
     serialNumber: false
   })
+  const [validationSuccess, setValidationSuccess] = useState<{
+    assetCode: boolean
+    serialNumber: boolean
+  }>({
+    assetCode: false,
+    serialNumber: false
+  })
   const router = useRouter()
   const { isActive: confettiActive, trigger: triggerConfetti } = useConfetti()
 
