@@ -68,7 +68,7 @@ export default function HomePage() {
 
         {/* Footer */}
         <div className="text-center text-xs text-muted-foreground space-y-1">
-          <p>© 2024 Chinhoyi University of Technology</p>
+          <p>© 2025 Chinhoyi University of Technology</p>
           <p>Secure • Reliable • Efficient</p>
         </div>
       </div>

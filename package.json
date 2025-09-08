@@ -1,7 +1,10 @@
 {
-  "name": "my-v0-project",
-  "version": "0.1.0",
+  "name": "university-asset-management",
+  "version": "1.0.0",
+  "description": "Professional Asset Management System for Chinhoyi University of Technology",
   "private": true,
+  "author": "Chinhoyi University of Technology",
+  "license": "MIT",
   "scripts": {
     "build": "next build",
     "dev": "next dev",

@@ -113,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             toast({
               title: "🎉 Welcome back!",
-              description: "Successfully signed in.",
+              description: `Successfully signed in as ${session.user.email}`,
             })
 
             // Redirect to dashboard
@@ -230,13 +230,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       toast({
         title: "👋 Signed out",
-        description: "You have been successfully signed out.",
+        description: "You have been successfully signed out. Thank you for using CUT Asset Manager.",
       })
     } catch (error) {
       console.error("Sign out error:", error)
       toast({
-        title: "❌ Error",
-        description: "Failed to sign out. Please try again.",
+        title: "❌ Sign out error",
+        description: "Failed to sign out. Please try again or refresh the page.",
         variant: "destructive",
       })
     } finally {

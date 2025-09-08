@@ -9,9 +9,42 @@ import { AuthErrorBoundary } from '@/components/auth/auth-error-boundary'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'University Asset Management',
-  description: 'Chinhoyi University of Technology Asset Management System',
-  generator: 'v0.app',
+  title: 'CUT Asset Manager | University Asset Management System',
+  description: 'Professional asset management system for Chinhoyi University of Technology. Secure, efficient, and user-friendly platform for managing university assets, maintenance, and inventory.',
+  keywords: ['asset management', 'university', 'inventory', 'maintenance', 'Chinhoyi University', 'CUT'],
+  authors: [{ name: 'Chinhoyi University of Technology' }],
+  creator: 'Chinhoyi University of Technology',
+  publisher: 'Chinhoyi University of Technology',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  metadataBase: new URL('https://cut-asset-manager.vercel.app'),
+  openGraph: {
+    title: 'CUT Asset Manager | University Asset Management System',
+    description: 'Professional asset management system for Chinhoyi University of Technology',
+    url: 'https://cut-asset-manager.vercel.app',
+    siteName: 'CUT Asset Manager',
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'CUT Asset Manager | University Asset Management System',
+    description: 'Professional asset management system for Chinhoyi University of Technology',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 }
 
 export default function RootLayout({

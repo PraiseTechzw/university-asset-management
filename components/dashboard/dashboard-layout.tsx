@@ -166,9 +166,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
           <h2 className="text-xl font-semibold text-red-800 dark:text-red-200">Dashboard Error</h2>
           <p className="text-red-700 dark:text-red-300">{error}</p>
+          <div className="mt-4 text-sm text-red-600 dark:text-red-400">
+            <p>If this error persists, please contact IT support:</p>
+            <p>• Email: it-support@cut.ac.zw</p>
+            <p>• Phone: +263 67 222 0000</p>
+          </div>
           <button 
             onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
           >
             Retry
           </button>

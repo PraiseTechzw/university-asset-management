@@ -3,6 +3,10 @@
 ## Overview
 This guide outlines the steps to deploy the University Asset Management System to production with proper security and performance configurations.
 
+**Version**: 1.0.0  
+**Last Updated**: January 2025  
+**Target Environment**: Production-ready deployment
+
 ## Environment Variables
 
 Create a `.env.local` file with the following variables:
@@ -18,6 +22,7 @@ NEXT_PUBLIC_AUTH_DOMAIN_RESTRICTION=@cut.ac.zw
 # Application Settings
 NEXT_PUBLIC_APP_NAME="Chinhoyi University Asset Management"
 NEXT_PUBLIC_APP_VERSION=1.0.0
+NEXT_PUBLIC_APP_YEAR=2025
 
 # Feature Flags
 NEXT_PUBLIC_ENABLE_ANALYTICS=false
@@ -124,3 +129,27 @@ For production issues, contact the development team with:
 - User actions leading to the issue
 - Browser/device information
 - Network environment details
+
+## Contact Information
+
+**IT Support Team**:
+- Email: it-support@cut.ac.zw
+- Phone: +263 67 222 0000
+- Office Hours: Monday - Friday, 8:00 AM - 5:00 PM
+
+**Emergency Support**:
+- Available 24/7 for critical system issues
+- Response time: Within 2 hours for critical issues
+
+## Maintenance Schedule
+
+**Regular Maintenance**:
+- Weekly: System health checks
+- Monthly: Security updates and patches
+- Quarterly: Performance optimization reviews
+- Annually: Full security audit and system upgrade
+
+**Planned Downtime**:
+- Maintenance windows: Sundays 2:00 AM - 4:00 AM
+- Advance notice: 48 hours minimum
+- Emergency maintenance: As needed with immediate notification

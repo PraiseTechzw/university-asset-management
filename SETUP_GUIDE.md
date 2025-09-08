@@ -2,6 +2,10 @@
 
 This guide will help you set up the CUT Asset Manager application with real backend connectivity and modern authentication.
 
+**Version**: 1.0.0  
+**Last Updated**: January 2025  
+**Compatibility**: Next.js 15, React 19, Supabase
+
 ## 🚀 Quick Start
 
 ### 1. Environment Variables
@@ -286,3 +290,22 @@ For technical support:
 ---
 
 **Note**: This application is designed specifically for Chinhoyi University of Technology and includes domain restrictions for security purposes.
+
+## 📋 System Requirements
+
+- **Node.js**: 18.0.0 or higher
+- **npm/pnpm/yarn**: Latest version
+- **Supabase Account**: For backend services
+- **Google Cloud Account**: For OAuth (optional)
+- **Modern Browser**: Chrome, Firefox, Safari, or Edge
+
+## 🔄 Updates and Maintenance
+
+This system is actively maintained and updated. For the latest updates and security patches, please check the project repository regularly.
+
+**Current Version Features**:
+- Enhanced authentication with better error handling
+- Professional UI/UX improvements
+- Updated security measures
+- Improved performance and reliability
+- Better mobile responsiveness

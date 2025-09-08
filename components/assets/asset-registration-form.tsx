@@ -129,16 +129,22 @@ export function AssetRegistrationForm() {
   return (
     <>
       <Confetti isActive={confettiActive} />
-      <Card>
-        <CardHeader>
-          <CardTitle>Asset Information</CardTitle>
-          <CardDescription>Fill in the details for the new asset. All required fields must be completed.</CardDescription>
+      <Card className="shadow-lg border-0 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl">
+        <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 rounded-t-lg">
+          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Asset Registration
+          </CardTitle>
+          <CardDescription className="text-base">
+            Fill in the details for the new asset. All required fields must be completed.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="assetCode">Asset Code *</Label>
+                <Label htmlFor="assetCode" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Asset Code *
+                </Label>
                 <div className="flex gap-2">
                   <Input
                     id="assetCode"
@@ -147,15 +153,24 @@ export function AssetRegistrationForm() {
                     placeholder="CUT-PROJ-001"
                     required
                     disabled={isLoading}
+                    className="flex-1 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                   />
-                  <Button type="button" variant="outline" onClick={generateAssetCode} disabled={isLoading}>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={generateAssetCode} 
+                    disabled={isLoading}
+                    className="whitespace-nowrap border-gray-200 hover:bg-gray-50"
+                  >
                     Generate
                   </Button>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="name">Asset Name *</Label>
+                <Label htmlFor="name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Asset Name *
+                </Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -163,6 +178,7 @@ export function AssetRegistrationForm() {
                   placeholder="Epson PowerLite Projector"
                   required
                   disabled={isLoading}
+                  className="border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
 
@@ -299,15 +315,25 @@ export function AssetRegistrationForm() {
               />
             </div>
 
-            <div className="flex gap-4">
-              <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>
+            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => router.back()} 
+                disabled={isLoading}
+                className="w-full sm:w-auto"
+              >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-university-blue-600 hover:bg-university-blue-700" disabled={isLoading}>
+              <Button 
+                type="submit" 
+                className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300" 
+                disabled={isLoading}
+              >
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Registering...
+                    Registering Asset...
                   </>
                 ) : (
                   "Register Asset"

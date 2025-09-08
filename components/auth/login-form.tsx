@@ -28,14 +28,34 @@ export function LoginForm() {
     e.preventDefault()
     setError("")
 
-    // Validate email domain
+    // Enhanced validation
+    if (!email.trim()) {
+      setError("Email address is required.")
+      return
+    }
+
+    if (!email.includes("@")) {
+      setError("Please enter a valid email address.")
+      return
+    }
+
     if (!email.endsWith("@cut.ac.zw")) {
       setError("Only @cut.ac.zw accounts are allowed to access this system.")
       return
     }
 
+    if (!password.trim()) {
+      setError("Password is required.")
+      return
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long.")
+      return
+    }
+
     try {
-      await signIn(email, password)
+      await signIn(email.trim().toLowerCase(), password)
       
       // Show success state and trigger confetti
       setIsSuccess(true)
@@ -44,7 +64,18 @@ export function LoginForm() {
       // Success toast is handled by AuthContext
     } catch (error) {
       console.error("Sign in error:", error)
-      setError(error instanceof Error ? error.message : "Failed to sign in")
+      const errorMessage = error instanceof Error ? error.message : "Failed to sign in"
+      
+      // Provide more specific error messages
+      if (errorMessage.includes("Invalid login credentials")) {
+        setError("Invalid email or password. Please check your credentials and try again.")
+      } else if (errorMessage.includes("Email not confirmed")) {
+        setError("Please check your email and click the confirmation link before signing in.")
+      } else if (errorMessage.includes("Too many requests")) {
+        setError("Too many sign-in attempts. Please wait a few minutes before trying again.")
+      } else {
+        setError(errorMessage)
+      }
       
       toast({
         title: "❌ Sign in failed",

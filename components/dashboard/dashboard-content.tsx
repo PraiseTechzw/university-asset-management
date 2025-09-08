@@ -89,8 +89,8 @@ export function DashboardContent() {
       console.error("Error in fetchUserProfile:", error)
       setError(error instanceof Error ? error.message : "Failed to load user profile")
       toast({
-        title: "❌ Error",
-        description: "Failed to load dashboard. Please refresh the page.",
+        title: "❌ Dashboard Error",
+        description: "Failed to load dashboard. Please refresh the page or contact IT support if the issue persists.",
         variant: "destructive",
       })
     } finally {
@@ -150,6 +150,11 @@ export function DashboardContent() {
             <CardDescription className="text-red-700 dark:text-red-300">
               {error}
             </CardDescription>
+            <div className="mt-4 text-sm text-red-600 dark:text-red-400">
+              <p>If this error persists, please contact the IT department:</p>
+              <p>• Email: it-support@cut.ac.zw</p>
+              <p>• Phone: +263 67 222 0000</p>
+            </div>
           </CardHeader>
           <CardContent className="text-center">
             <Button 

@@ -178,8 +178,8 @@ export function AdminDashboard() {
     } catch (error) {
       console.error("Error fetching dashboard data:", error)
       toast({
-        title: "❌ Error",
-        description: "Failed to load dashboard data. Please refresh the page.",
+        title: "❌ Dashboard Error",
+        description: "Failed to load dashboard data. Please refresh the page or contact IT support if the issue persists.",
         variant: "destructive",
       })
     } finally {
@@ -255,7 +255,7 @@ export function AdminDashboard() {
                 Welcome to the Admin Dashboard
               </h2>
               <p className="text-muted-foreground">
-                Manage assets, users, and system settings with full administrative access
+                Manage assets, users, and system settings with full administrative access. Last updated: {new Date().toLocaleDateString()}
               </p>
             </div>
             <div className="hidden md:block">
