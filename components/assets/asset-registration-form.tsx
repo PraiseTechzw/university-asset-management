@@ -183,13 +183,15 @@ export function AssetRegistrationForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="category">Category *</Label>
+                <Label htmlFor="category" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Category *
+                </Label>
                 <Select
                   value={formData.category}
                   onValueChange={(value) => setFormData({ ...formData, category: value })}
                   disabled={isLoading}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="border-gray-200 focus:border-blue-500 focus:ring-blue-500">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
