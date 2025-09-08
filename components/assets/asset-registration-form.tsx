@@ -141,12 +141,15 @@ export function AssetRegistrationForm() {
       if (error && error.code === "PGRST116") {
         // No record found, code is unique
         setValidationErrors(prev => ({ ...prev, assetCode: undefined }))
+        setValidationSuccess(prev => ({ ...prev, assetCode: true }))
         return true
       } else if (data) {
         setValidationErrors(prev => ({ ...prev, assetCode: "Asset code already exists" }))
+        setValidationSuccess(prev => ({ ...prev, assetCode: false }))
         return false
       } else {
         setValidationErrors(prev => ({ ...prev, assetCode: "Error checking asset code" }))
+        setValidationSuccess(prev => ({ ...prev, assetCode: false }))
         return false
       }
     } catch (error) {
@@ -176,12 +179,15 @@ export function AssetRegistrationForm() {
       if (error && error.code === "PGRST116") {
         // No record found, serial number is unique
         setValidationErrors(prev => ({ ...prev, serialNumber: undefined }))
+        setValidationSuccess(prev => ({ ...prev, serialNumber: true }))
         return true
       } else if (data) {
         setValidationErrors(prev => ({ ...prev, serialNumber: "Serial number already exists" }))
+        setValidationSuccess(prev => ({ ...prev, serialNumber: false }))
         return false
       } else {
         setValidationErrors(prev => ({ ...prev, serialNumber: "Error checking serial number" }))
+        setValidationSuccess(prev => ({ ...prev, serialNumber: false }))
         return false
       }
     } catch (error) {
@@ -314,9 +320,12 @@ export function AssetRegistrationForm() {
                       value={formData.assetCode}
                       onChange={(e) => {
                         setFormData({ ...formData, assetCode: e.target.value })
-                        // Clear error when user starts typing
+                        // Clear error and success when user starts typing
                         if (validationErrors.assetCode) {
                           setValidationErrors(prev => ({ ...prev, assetCode: undefined }))
+                        }
+                        if (validationSuccess.assetCode) {
+                          setValidationSuccess(prev => ({ ...prev, assetCode: false }))
                         }
                       }}
                       onBlur={() => {
@@ -336,6 +345,11 @@ export function AssetRegistrationForm() {
                     {isValidating.assetCode && (
                       <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                         <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                      </div>
+                    )}
+                    {validationSuccess.assetCode && !isValidating.assetCode && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <CheckCircle className="w-4 h-4 text-green-500" />
                       </div>
                     )}
                   </div>
@@ -448,6 +462,11 @@ export function AssetRegistrationForm() {
                   {isValidating.serialNumber && (
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                       <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                    </div>
+                  )}
+                  {validationSuccess.serialNumber && !isValidating.serialNumber && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
                     </div>
                   )}
                 </div>
