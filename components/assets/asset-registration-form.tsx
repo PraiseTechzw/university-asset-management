@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/hooks/use-toast"
 import { Confetti, useConfetti } from "@/components/ui/confetti"
-import { Loader2 } from "lucide-react"
+import { Loader2, CheckCircle } from "lucide-react"
 
 interface AssetFormData {
   assetCode: string
@@ -46,10 +46,21 @@ export function AssetRegistrationForm() {
     description: "",
   })
   const [isLoading, setIsLoading] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<{
+    assetCode?: string
+    serialNumber?: string
+  }>({})
+  const [isValidating, setIsValidating] = useState<{
+    assetCode: boolean
+    serialNumber: boolean
+  }>({
+    assetCode: false,
+    serialNumber: false
+  })
   const router = useRouter()
   const { isActive: confettiActive, trigger: triggerConfetti } = useConfetti()
 
-  const generateAssetCode = () => {
+  const generateAssetCode = async () => {
     const categoryPrefix =
       {
         projector: "PROJ",
@@ -60,18 +71,140 @@ export function AssetRegistrationForm() {
         other: "OTHER",
       }[formData.category] || "ASSET"
 
-    const randomNum = Math.floor(Math.random() * 1000)
-      .toString()
-      .padStart(3, "0")
-    const code = `CUT-${categoryPrefix}-${randomNum}`
-    setFormData({ ...formData, assetCode: code })
+    let code = ""
+    let isUnique = false
+    let attempts = 0
+    const maxAttempts = 10
+
+    // Generate unique asset code
+    while (!isUnique && attempts < maxAttempts) {
+      const randomNum = Math.floor(Math.random() * 1000)
+        .toString()
+        .padStart(3, "0")
+      code = `CUT-${categoryPrefix}-${randomNum}`
+      
+      // Check if code is unique
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from("assets")
+        .select("asset_code")
+        .eq("asset_code", code)
+        .single()
+
+      if (error && error.code === "PGRST116") {
+        // No record found, code is unique
+        isUnique = true
+      } else if (data) {
+        // Code exists, try again
+        attempts++
+      } else {
+        // Other error, break
+        break
+      }
+    }
+
+    if (isUnique) {
+      setFormData({ ...formData, assetCode: code })
+      setValidationErrors(prev => ({ ...prev, assetCode: undefined }))
+    } else {
+      toast({
+        title: "⚠️ Warning",
+        description: "Unable to generate unique asset code. Please try again or enter manually.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const validateAssetCode = async (code: string) => {
+    if (!code.trim()) {
+      setValidationErrors(prev => ({ ...prev, assetCode: "Asset code is required" }))
+      return false
+    }
+
+    setIsValidating(prev => ({ ...prev, assetCode: true }))
+
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from("assets")
+        .select("asset_code")
+        .eq("asset_code", code)
+        .single()
+
+      if (error && error.code === "PGRST116") {
+        // No record found, code is unique
+        setValidationErrors(prev => ({ ...prev, assetCode: undefined }))
+        return true
+      } else if (data) {
+        setValidationErrors(prev => ({ ...prev, assetCode: "Asset code already exists" }))
+        return false
+      } else {
+        setValidationErrors(prev => ({ ...prev, assetCode: "Error checking asset code" }))
+        return false
+      }
+    } catch (error) {
+      setValidationErrors(prev => ({ ...prev, assetCode: "Error checking asset code" }))
+      return false
+    } finally {
+      setIsValidating(prev => ({ ...prev, assetCode: false }))
+    }
+  }
+
+  const validateSerialNumber = async (serialNumber: string) => {
+    if (!serialNumber.trim()) {
+      setValidationErrors(prev => ({ ...prev, serialNumber: undefined }))
+      return true // Serial number is optional
+    }
+
+    setIsValidating(prev => ({ ...prev, serialNumber: true }))
+
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase
+        .from("assets")
+        .select("serial_number")
+        .eq("serial_number", serialNumber)
+        .single()
+
+      if (error && error.code === "PGRST116") {
+        // No record found, serial number is unique
+        setValidationErrors(prev => ({ ...prev, serialNumber: undefined }))
+        return true
+      } else if (data) {
+        setValidationErrors(prev => ({ ...prev, serialNumber: "Serial number already exists" }))
+        return false
+      } else {
+        setValidationErrors(prev => ({ ...prev, serialNumber: "Error checking serial number" }))
+        return false
+      }
+    } catch (error) {
+      setValidationErrors(prev => ({ ...prev, serialNumber: "Error checking serial number" }))
+      return false
+    } finally {
+      setIsValidating(prev => ({ ...prev, serialNumber: false }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setValidationErrors({})
 
     try {
+      // Validate asset code uniqueness
+      const isAssetCodeValid = await validateAssetCode(formData.assetCode)
+      if (!isAssetCodeValid) {
+        setIsLoading(false)
+        return
+      }
+
+      // Validate serial number uniqueness (if provided)
+      const isSerialNumberValid = await validateSerialNumber(formData.serialNumber)
+      if (!isSerialNumberValid) {
+        setIsLoading(false)
+        return
+      }
+
       const supabase = createClient()
 
       // Get current user
@@ -89,7 +222,7 @@ export function AssetRegistrationForm() {
         category: formData.category,
         brand: formData.brand,
         model: formData.model,
-        serial_number: formData.serialNumber,
+        serial_number: formData.serialNumber || null,
         purchase_date: formData.purchaseDate || null,
         purchase_price: formData.purchasePrice ? Number.parseFloat(formData.purchasePrice) : null,
         warranty_expiry: formData.warrantyExpiry || null,
@@ -100,7 +233,29 @@ export function AssetRegistrationForm() {
         created_by: user.id,
       })
 
-      if (error) throw error
+      if (error) {
+        // Handle specific database errors
+        if (error.code === "23505") {
+          if (error.message.includes("asset_code")) {
+            setValidationErrors(prev => ({ ...prev, assetCode: "Asset code already exists" }))
+            toast({
+              title: "❌ Duplicate Asset Code",
+              description: "This asset code is already in use. Please choose a different one.",
+              variant: "destructive",
+            })
+          } else if (error.message.includes("serial_number")) {
+            setValidationErrors(prev => ({ ...prev, serialNumber: "Serial number already exists" }))
+            toast({
+              title: "❌ Duplicate Serial Number",
+              description: "This serial number is already in use. Please choose a different one.",
+              variant: "destructive",
+            })
+          }
+        } else {
+          throw error
+        }
+        return
+      }
 
       // Trigger confetti animation
       triggerConfetti()
@@ -146,15 +301,37 @@ export function AssetRegistrationForm() {
                   Asset Code *
                 </Label>
                 <div className="flex gap-2">
-                  <Input
-                    id="assetCode"
-                    value={formData.assetCode}
-                    onChange={(e) => setFormData({ ...formData, assetCode: e.target.value })}
-                    placeholder="CUT-PROJ-001"
-                    required
-                    disabled={isLoading}
-                    className="flex-1 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-                  />
+                  <div className="relative flex-1">
+                    <Input
+                      id="assetCode"
+                      value={formData.assetCode}
+                      onChange={(e) => {
+                        setFormData({ ...formData, assetCode: e.target.value })
+                        // Clear error when user starts typing
+                        if (validationErrors.assetCode) {
+                          setValidationErrors(prev => ({ ...prev, assetCode: undefined }))
+                        }
+                      }}
+                      onBlur={() => {
+                        if (formData.assetCode.trim()) {
+                          validateAssetCode(formData.assetCode)
+                        }
+                      }}
+                      placeholder="CUT-PROJ-001"
+                      required
+                      disabled={isLoading}
+                      className={`w-full ${
+                        validationErrors.assetCode 
+                          ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
+                          : "border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                      }`}
+                    />
+                    {isValidating.assetCode && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                      </div>
+                    )}
+                  </div>
                   <Button 
                     type="button" 
                     variant="outline" 
@@ -165,6 +342,12 @@ export function AssetRegistrationForm() {
                     Generate
                   </Button>
                 </div>
+                {validationErrors.assetCode && (
+                  <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                    <span className="w-4 h-4 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center text-xs">!</span>
+                    {validationErrors.assetCode}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -228,14 +411,45 @@ export function AssetRegistrationForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="serialNumber">Serial Number</Label>
-                <Input
-                  id="serialNumber"
-                  value={formData.serialNumber}
-                  onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
-                  placeholder="EP1795F001"
-                  disabled={isLoading}
-                />
+                <Label htmlFor="serialNumber" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Serial Number
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="serialNumber"
+                    value={formData.serialNumber}
+                    onChange={(e) => {
+                      setFormData({ ...formData, serialNumber: e.target.value })
+                      // Clear error when user starts typing
+                      if (validationErrors.serialNumber) {
+                        setValidationErrors(prev => ({ ...prev, serialNumber: undefined }))
+                      }
+                    }}
+                    onBlur={() => {
+                      if (formData.serialNumber.trim()) {
+                        validateSerialNumber(formData.serialNumber)
+                      }
+                    }}
+                    placeholder="EP1795F001"
+                    disabled={isLoading}
+                    className={`w-full ${
+                      validationErrors.serialNumber 
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-500" 
+                        : "border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    }`}
+                  />
+                  {isValidating.serialNumber && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                    </div>
+                  )}
+                </div>
+                {validationErrors.serialNumber && (
+                  <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1">
+                    <span className="w-4 h-4 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center text-xs">!</span>
+                    {validationErrors.serialNumber}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -330,7 +544,7 @@ export function AssetRegistrationForm() {
               <Button 
                 type="submit" 
                 className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300" 
-                disabled={isLoading}
+                disabled={isLoading || !!validationErrors.assetCode || !!validationErrors.serialNumber}
               >
                 {isLoading ? (
                   <>
