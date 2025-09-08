@@ -441,9 +441,12 @@ export function AssetRegistrationForm() {
                     value={formData.serialNumber}
                     onChange={(e) => {
                       setFormData({ ...formData, serialNumber: e.target.value })
-                      // Clear error when user starts typing
+                      // Clear error and success when user starts typing
                       if (validationErrors.serialNumber) {
                         setValidationErrors(prev => ({ ...prev, serialNumber: undefined }))
+                      }
+                      if (validationSuccess.serialNumber) {
+                        setValidationSuccess(prev => ({ ...prev, serialNumber: false }))
                       }
                     }}
                     onBlur={() => {
