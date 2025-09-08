@@ -91,7 +91,7 @@ export default function CalendarPage() {
         startDate: record.reported_date,
         endDate: record.resolved_date || record.reported_date,
         description: record.issue_description,
-        assetName: record.assets?.name,
+        assetName: record.assets?.[0]?.name,
         status: record.status,
         priority: record.priority || 'medium'
       }))
@@ -104,7 +104,7 @@ export default function CalendarPage() {
         startDate: issue.issue_date,
         endDate: issue.expected_return_date || issue.issue_date,
         description: issue.notes,
-        assetName: issue.assets?.name,
+        assetName: issue.assets?.[0]?.name,
         status: issue.status,
         priority: issue.status === 'overdue' ? 'high' : 'medium'
       }))
